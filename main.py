@@ -16,6 +16,7 @@ dp = Dispatcher(bot, storage=MemoryStorage())
 
 username = ''
 
+
 @dp.message_handler(commands="start")
 async def start(msg: types.Message):
     text = f"Assalomu alekum {msg.from_user.full_name} bizning botimizga hush kelibsiz!"
@@ -27,10 +28,10 @@ async def start(msg: types.Message):
 @dp.message_handler(text='🏢Bizning joylashuv')  # noqa
 async def locotion(msg: types.Message):
     text = """
-     📍Manzil: Qorasuv mavzesi 12A uy
-    🏬Mo'ljal: Al Eayila do'koni 2-qavat
+📍Manzil: Qorasuv mavzesi 12A uy
+🏬Mo'ljal: Al Eayila do'koni 2-qavat
     """
-    await msg.answer(text)
+    await msg.answer(f"<b>text</b>", parse_mode='html')
     await bot.send_location(msg.from_user.id, longitude=66.933566, latitude=39.718122)
 
 
@@ -70,18 +71,17 @@ async def phone_number(msg: types.Message, state: FSMContext):
            f"Mijozning yoshi: {s.get('age')}\n" \
            f"Mijozning telefon raqami: {s.get('phone_number')}"
     await bot.send_message(ID1, text)
-    await msg.answer("Tez orada siz bilan bog'lanamiz...")
+    await msg.answer("Tez orada siz bilan bog'lanamiz...", reply_markup=btn)
     await state.finish()
 
 
 @dp.message_handler(text='✉️Talab va takliflar uchun')
 async def fedbik(msg: types.Message):
     text = """
-    O'quv markazimiz o'quvchilari markazimiz sharoitlari haqidagi va o'qituvchilar yoki dars jarayonidagi
-    kamchiliklar haqidagi har qanday talab va takliflarni tinglashga tayyormiz!
-    Shaxsingiz to'liq sir saqlanadi!
-    """
-    await msg.answer(text)
+O'quv markazimiz o'quvchilari markazimiz sharoitlari haqidagi va o'qituvchilar yoki dars jarayonidagi
+kamchiliklar haqidagi har qanday talab va takliflarni tinglashga tayyormiz!
+Shaxsingiz to'liq sir saqlanadi!"""
+    await msg.answer(f"<b>{text}</b>", parse_mode='html')
     await msg.answer("Izohni qoldiring:  ")
     await Fedbik.content.set()
 
@@ -94,7 +94,7 @@ async def content(msg: types.Message, state: FSMContext):
     text = f"Izoh: {s['cotent']}\n" \
            f"User: @{username}"
     await bot.send_message(ID1, text)
-    await msg.answer("Qabul qilindi sizning fikringiz biz uchun muhum!")
+    await msg.answer(f"<b>Qabul qilindi sizning fikringiz biz uchun muhum!/b>", parse_mode='html')
     await state.finish()
 
 
