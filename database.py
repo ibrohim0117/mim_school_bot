@@ -46,5 +46,3 @@ def check_user(user_id):
 
 
 
-
-

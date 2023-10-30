@@ -1,3 +1,4 @@
+import re
 from aiogram import Bot, types, executor, Dispatcher
 import logging
 from config import TOKEN, ID1
@@ -6,7 +7,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import ReplyKeyboardRemove
 from database import creat_table, insert_into, check_user
 from defoult_buttons import btn, contact
-from states import Reg, Fedbik
+from states import Reg, Fedbik, validate_phone_number
 
 logging.basicConfig(level=logging.INFO)
 
@@ -73,6 +74,7 @@ async def age(msg: types.Message, state: FSMContext):
 
 @dp.message_handler(state=Reg.phone_number, content_types=types.ContentTypes.CONTACT)
 async def phone_number(msg: types.Message, state: FSMContext):
+    print(msg.text)
     await state.update_data(phone_number=msg.contact.phone_number)
     s = await state.get_data()
     text = f" Mijozning ismi: {s.get('first_name')}\n" \
@@ -81,6 +83,21 @@ async def phone_number(msg: types.Message, state: FSMContext):
     await bot.send_message(ID1, text)
     await msg.answer("Tez orada siz bilan bog'lanamiz...", reply_markup=btn)
     await state.finish()
+
+
+@dp.message_handler(state=Reg.phone_number)
+async def phone_number(msg: types.Message, state: FSMContext):
+    if validate_phone_number(msg.text):
+        await state.update_data(phone_number=msg.text)
+        s = await state.get_data()
+        text = f" Mijozning ismi: {s.get('first_name')}\n" \
+               f"Mijozning yoshi: {s.get('age')}\n" \
+               f"Mijozning telefon raqami: {s.get('phone_number')}"
+        await bot.send_message(ID1, text)
+        await msg.answer("Tez orada siz bilan bog'lanamiz...", reply_markup=btn)
+        await state.finish()
+    else:
+        await msg.answer("Telefon raqamni qaytadan  to'g'ri kiriting!")
 
 
 @dp.message_handler(text='✉️Talab va takliflar uchun')
