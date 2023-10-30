@@ -10,3 +10,14 @@ class Reg(StatesGroup):
 class Fedbik(StatesGroup):
     content = State()
 
+
+
+
+
+
+
+
+
+
+
+

@@ -29,3 +29,22 @@ async def insert_into(user_id, username, full_name):
     conn.close()
 
 
+def check_user(user_id):
+    import sqlite3
+    conn = sqlite3.connect('mim_bot.db')
+    curr = conn.cursor()
+
+    user = curr.execute(f"""
+    SELECT user_id from user where user_id = {str(user_id)}
+    """).fetchone()
+
+    if user is None:
+        return False
+
+    elif len(user):
+        return True
+
+
+
+
+

@@ -3,8 +3,8 @@ import logging
 from config import TOKEN, ID1
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
-
-from database import creat_table, insert_into
+from aiogram.types import ReplyKeyboardRemove
+from database import creat_table, insert_into, check_user
 from defoult_buttons import btn, contact
 from states import Reg, Fedbik
 
@@ -22,10 +22,11 @@ username = ''
 async def start(msg: types.Message):
     creat_table()
     text = f"Assalomu alekum {msg.from_user.full_name} bizning botimizga hush kelibsiz!"
-    a = (msg.from_user.id)
-    print(a)
-    await insert_into(str(msg.from_user.id), msg.from_user.username, msg.from_user.full_name)
-    await msg.answer(text, reply_markup=btn)
+    if check_user(msg.from_user.id):
+        await msg.answer(text, reply_markup=btn)
+    else:
+        await insert_into(str(msg.from_user.id), msg.from_user.username, msg.from_user.full_name)
+        await msg.answer(text, reply_markup=btn)
 
 
 @dp.message_handler(text='🏢Bizning joylashuv')  # noqa
@@ -46,37 +47,28 @@ async def aloqa(msg: types.Message):
 @dp.message_handler(text="🚀Kurslarga yozilish / to'liq ma'lumot olish")
 async def first_name(msg: types.Message):
     text = "Ismingizni kiriting: "
-    if msg.text in ['🏢Bizning joylashuv', '📞Admin bilan aloqa', "🚀Kurslarga yozilish / to'liq ma'lumot olish",
-                        '📞Admin bilan aloqa']:
-        await msg.answer(text)
-        await Reg.first_name.set()
-
-    else:
-        await msg.answer(text)
+    await msg.answer(text, reply_markup=ReplyKeyboardRemove())
+    await Reg.first_name.set()
 
 
 @dp.message_handler(state=Reg.first_name)
 async def name(msg: types.Message, state: FSMContext):
     await state.update_data(first_name=msg.text)
     text = "Yoshingizni kiriting: "
-    if msg.text not in ['🏢Bizning joylashuv', '📞Admin bilan aloqa', "🚀Kurslarga yozilish / to'liq ma'lumot olish",
-                        '📞Admin bilan aloqa']:
-        await msg.answer(text)
-        await Reg.age.set()
-    else:
-        await msg.answer(text)
+    await msg.answer(text)
+    await Reg.age.set()
 
 
 @dp.message_handler(state=Reg.age)
 async def age(msg: types.Message, state: FSMContext):
-    await state.update_data(age=msg.text)
-    text = "Telfon raqamingizni kiriting: "
-    if msg.text not in ['🏢Bizning joylashuv', '📞Admin bilan aloqa', "🚀Kurslarga yozilish / to'liq ma'lumot olish",
-                        '📞Admin bilan aloqa']:
+    if msg.text.isdigit():
+        await state.update_data(age=msg.text)
+        text = "Telfon raqamingizni kiriting: "
         await msg.answer(text, reply_markup=contact)
         await Reg.phone_number.set()
     else:
-        await msg.answer(text)
+        await msg.answer('Yoshingizni raqam shakilda kirting!')
+        await msg.answer("Yoshingizni kiriting: ")
 
 
 @dp.message_handler(state=Reg.phone_number, content_types=types.ContentTypes.CONTACT)
@@ -119,3 +111,5 @@ async def on_startup(dp):
 
 if __name__ == "__main__":
     executor.start_polling(dp, on_startup=on_startup, skip_updates=True)
+
+
