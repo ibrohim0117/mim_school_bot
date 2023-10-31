@@ -1,13 +1,16 @@
-import re
+import aiogram.utils.markdown as md
 from aiogram import Bot, types, executor, Dispatcher
 import logging
 from config import TOKEN, ID1
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
-from aiogram.types import ReplyKeyboardRemove
-from database import creat_table, insert_into, check_user
+from aiogram.types import ReplyKeyboardRemove, ParseMode
+from database import creat_table, insert_into, check_user, user_list
 from defoult_buttons import btn, contact
-from states import Reg, Fedbik, validate_phone_number
+from inline_buttons import ikm
+from states import Reg, Fedbik, SendMessageUsers
+from utils import validate_phone_number
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -22,7 +25,7 @@ username = ''
 @dp.message_handler(commands="start")
 async def start(msg: types.Message):
     creat_table()
-    text = f"Assalomu alekum {msg.from_user.full_name} bizning botimizga hush kelibsiz!"
+    text = "Assalomu alekum botimizga hush kelibsiz!"
     if check_user(msg.from_user.id):
         await msg.answer(text, reply_markup=btn)
     else:
@@ -76,7 +79,7 @@ async def age(msg: types.Message, state: FSMContext):
 async def phone_number(msg: types.Message, state: FSMContext):
     print(msg.text)
     await state.update_data(phone_number=msg.contact.phone_number)
-    s = await state.get_data()
+    s = await state.get_data()  # noqa
     text = f" Mijozning ismi: {s.get('first_name')}\n" \
            f"Mijozning yoshi: {s.get('age')}\n" \
            f"Mijozning telefon raqami: {s.get('phone_number')}"
@@ -103,8 +106,8 @@ async def phone_number(msg: types.Message, state: FSMContext):
 @dp.message_handler(text='✉️Talab va takliflar uchun')
 async def fedbik(msg: types.Message):
     text = """
-O'quv markazimiz o'quvchilari markazimiz sharoitlari haqidagi va o'qituvchilar yoki dars jarayonidagi
-kamchiliklar haqidagi har qanday talab va takliflarni tinglashga tayyormiz!
+O'quv markazimiz o'quvchilari markazimiz sharoitlari yoki dars jarayonidagi
+kamchiliklar haqidagi. Har qanday talab va takliflarni tinglashga tayyormiz!
 Shaxsingiz to'liq sir saqlanadi!"""
     await msg.answer(f"<b>{text}</b>", parse_mode='html')
     await msg.answer("Izohni qoldiring:  ")
@@ -121,6 +124,51 @@ async def content(msg: types.Message, state: FSMContext):
     await bot.send_message(ID1, text)
     await state.finish()
     await msg.answer(f"<b>Qabul qilindi sizning fikringiz biz uchun muhum!</b>", parse_mode='html')
+
+
+@dp.message_handler(text="a")
+async def message(msg: types.Message):
+    if msg.from_user.id == ID1:
+        await SendMessageUsers.text_user.set()
+        await msg.answer("Xabarni kiriting: ")
+    else:
+        await msg.answer('Buttonslardan birini tanlang!')
+
+
+@dp.message_handler(state=SendMessageUsers.text_user)
+async def l_h(msg: types.Message, state: FSMContext):
+    print(msg.text)
+    await state.update_data(text_user=msg.text)
+    await msg.answer('Habarning rasmini kiriting: ')
+    await SendMessageUsers.photo.set()
+
+
+@dp.message_handler(state=SendMessageUsers.photo, content_types=types.ContentType.PHOTO)
+async def get_photo_handler(msg: types.Message, state: FSMContext):
+    await state.update_data({"photo": msg.photo[-1].file_id})
+    text = "<b>Habar yuborilsinmi?</b>"
+    await msg.answer(text=text, reply_markup=ikm, parse_mode='html')
+    await SendMessageUsers.yes_or_no.set()
+
+
+@dp.callback_query_handler(text=(['yes', 'no']), state=SendMessageUsers.yes_or_no)
+async def yes_handler_h(callback: types.CallbackQuery, state: FSMContext):
+    await state.update_data(yes_no=callback.data)
+    s = await state.get_data()
+    photo = s['photo']
+    text = s['text_user']
+    await state.finish()
+    if callback.data == 'yes':
+        if callback.from_user.id == ID1:
+            try:
+                for i in user_list():
+                    await bot.send_photo(chat_id=int(i), caption=text, photo=photo)
+                await callback.answer("Habar yuborildi!")
+            except:  # noqa
+                pass
+    else:
+        await callback.message.answer('Amalyot bekor qilindi!')
+
 
 
 async def on_startup(dp):

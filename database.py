@@ -45,4 +45,20 @@ def check_user(user_id):
         return True
 
 
+def user_list():
+    import sqlite3
+    conn = sqlite3.connect('mim_bot.db')
+    curr = conn.cursor()
+
+    users = curr.execute("""
+    SELECT user_id from user
+    """).fetchall()
+    l = []
+    for i in users:
+        l.append(i[0])
+    return l
+
+# print(user_list())
+
+
 
