@@ -1,7 +1,7 @@
 import aiogram.utils.markdown as md
 from aiogram import Bot, types, executor, Dispatcher
 import logging
-from config import TOKEN, ID1
+from config import TOKEN, ID1, ID2, ID3
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.types import ReplyKeyboardRemove, ParseMode
@@ -77,7 +77,7 @@ async def age(msg: types.Message, state: FSMContext):
 
 @dp.message_handler(state=Reg.phone_number, content_types=types.ContentTypes.CONTACT)
 async def phone_number(msg: types.Message, state: FSMContext):
-    print(msg.text)
+    # print(msg.text)
     await state.update_data(phone_number=msg.contact.phone_number)
     s = await state.get_data()  # noqa
     text = f" Mijozning ismi: {s.get('first_name')}\n" \
@@ -110,7 +110,7 @@ O'quv markazimiz o'quvchilari markazimiz sharoitlari yoki dars jarayonidagi
 kamchiliklar haqidagi. Har qanday talab va takliflarni tinglashga tayyormiz!
 Shaxsingiz to'liq sir saqlanadi!"""
     await msg.answer(f"<b>{text}</b>", parse_mode='html')
-    await msg.answer("Izohni qoldiring:  ")
+    await msg.answer("Izohni qoldiring:  ", reply_markup=ReplyKeyboardRemove())
     await Fedbik.content.set()
 
 
@@ -121,12 +121,12 @@ async def content(msg: types.Message, state: FSMContext):
     s = await state.get_data()
     text = f"Izoh: {s['cotent']}\n" \
            f"User: @{username}"
-    await bot.send_message(ID1, text)
+    await bot.send_message(ID3, text)
     await state.finish()
-    await msg.answer(f"<b>Qabul qilindi sizning fikringiz biz uchun muhum!</b>", parse_mode='html')
+    await msg.answer(f"<b>Qabul qilindi sizning fikringiz biz uchun muhum!</b>", parse_mode='html', reply_markup=btn)
 
 
-@dp.message_handler(text="a")
+@dp.message_handler(text="h@bar#yuborish")
 async def message(msg: types.Message):
     if msg.from_user.id == ID1:
         await SendMessageUsers.text_user.set()
@@ -137,7 +137,7 @@ async def message(msg: types.Message):
 
 @dp.message_handler(state=SendMessageUsers.text_user)
 async def l_h(msg: types.Message, state: FSMContext):
-    print(msg.text)
+    # print(msg.text)
     await state.update_data(text_user=msg.text)
     await msg.answer('Habarning rasmini kiriting: ')
     await SendMessageUsers.photo.set()
@@ -159,7 +159,7 @@ async def yes_handler_h(callback: types.CallbackQuery, state: FSMContext):
     text = s['text_user']
     await state.finish()
     if callback.data == 'yes':
-        if callback.from_user.id == ID1:
+        if callback.from_user.id == ID1 or callback.from_user.id == ID2:
             try:
                 for i in user_list():
                     await bot.send_photo(chat_id=int(i), caption=text, photo=photo)
@@ -170,11 +170,8 @@ async def yes_handler_h(callback: types.CallbackQuery, state: FSMContext):
         await callback.message.answer('Amalyot bekor qilindi!')
 
 
-
 async def on_startup(dp):
     creat_table()
 
 if __name__ == "__main__":
     executor.start_polling(dp, on_startup=on_startup, skip_updates=True)
-
-
