@@ -1,7 +1,6 @@
-import aiogram.utils.markdown as md
+import os
 from aiogram import Bot, types, executor, Dispatcher
 import logging
-from config import TOKEN, ID1, ID2, ID3
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.types import ReplyKeyboardRemove, ParseMode
@@ -10,6 +9,14 @@ from defoult_buttons import btn, contact
 from inline_buttons import ikm
 from states import Reg, Fedbik, SendMessageUsers
 from utils import validate_phone_number
+from dotenv import load_dotenv
+
+load_dotenv()
+
+TOKEN = (os.getenv("token"))
+ID1 = (os.getenv("ID1"))
+ID2 = (os.getenv("ID2"))
+ID3 = (os.getenv("ID3"))
 
 
 logging.basicConfig(level=logging.INFO)
